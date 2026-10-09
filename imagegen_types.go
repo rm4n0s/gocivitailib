@@ -149,15 +149,38 @@ const (
 type LoRAMap = map[string]float64
 
 // WorkflowStatus is the lifecycle state of a workflow or individual step.
+// Civitai documents: unassigned -> preparing -> scheduled -> processing ->
+// succeeded | failed | expired | canceled.
 type WorkflowStatus = string
 
 const (
-	WorkflowStatusPending   WorkflowStatus = "pending"
-	WorkflowStatusRunning   WorkflowStatus = "running"
-	WorkflowStatusSucceeded WorkflowStatus = "succeeded"
-	WorkflowStatusFailed    WorkflowStatus = "failed"
-	WorkflowStatusCancelled WorkflowStatus = "cancelled"
+	WorkflowStatusUnassigned WorkflowStatus = "unassigned"
+	WorkflowStatusPending    WorkflowStatus = "pending" // not in Civitai's current documentation
+	WorkflowStatusPreparing  WorkflowStatus = "preparing"
+	WorkflowStatusScheduled  WorkflowStatus = "scheduled"
+	WorkflowStatusProcessing WorkflowStatus = "processing"
+	WorkflowStatusSucceeded  WorkflowStatus = "succeeded"
+	WorkflowStatusFailed     WorkflowStatus = "failed"
+	WorkflowStatusExpired    WorkflowStatus = "expired"
+	WorkflowStatusCanceled   WorkflowStatus = "canceled"
+
+	// WorkflowStatusRunning is the old name of WorkflowStatusProcessing. Its
+	// value used to be "running", which Civitai never sends.
+	WorkflowStatusRunning = WorkflowStatusProcessing
+	// WorkflowStatusCancelled is the old spelling of WorkflowStatusCanceled.
+	// Its value used to be "cancelled", which Civitai never sends.
+	WorkflowStatusCancelled = WorkflowStatusCanceled
 )
+
+// IsTerminalStatus reports whether a workflow or step in this status will not
+// change again.
+func IsTerminalStatus(s WorkflowStatus) bool {
+	switch s {
+	case WorkflowStatusSucceeded, WorkflowStatusFailed, WorkflowStatusExpired, WorkflowStatusCanceled:
+		return true
+	}
+	return false
+}
 
 // ---------------------------------------------------------------------------
 // ImageGenInput — unified input struct for all image-generation recipes
